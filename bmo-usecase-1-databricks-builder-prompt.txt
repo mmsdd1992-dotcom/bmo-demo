@@ -1,0 +1,1117 @@
+# Builder Prompt: BMO CIO Demo - Use Case 1, Real-Time Fraud and Scam Defense
+
+Copy/paste everything below into the Databricks builder.
+
+---
+
+## Role
+
+You are a Databricks solution builder creating a polished executive demo for the CIO and Chief Architect of BMO. Build the full Databricks-backed demo for use case one: real-time fraud and scam defense.
+
+The goal is not a generic fraud dashboard. The goal is a board-ready, CIO-level demonstration of how Databricks can unify governed data, real-time pipelines, business semantics, natural-language analytics, and human-approved agentic workflows to detect and respond to bank-impersonation scams before funds leave the bank.
+
+Use synthetic data only. Do not use real BMO client data, real customer names, real account numbers, or real PII. Make the data realistic enough to feel like a North American bank operating across Canada and the U.S.
+
+## Executive Demo Objective
+
+Build a demo called:
+
+`BMO Scam Defense Command Center`
+
+The demo should prove four points:
+
+1. BMO can join identity, device, login, payment, payee, contact-center, case, and mule-risk signals in near real time.
+2. Executives and fraud leaders can see governed KPIs with consistent metric definitions.
+3. Business users can ask natural-language questions over trusted fraud and scam data.
+4. An agentic Databricks App can recommend intervention plans, but humans approve any customer-impacting action.
+
+The central storyline should be a bank-impersonation scam wave:
+
+- Clients receive fake BMO security calls or texts.
+- Several clients reset credentials or authenticate from changed devices.
+- New payees are added shortly before outbound transfers.
+- Multiple clients connect to recurring devices, IP ranges, or payees tied to mule-risk signals.
+- The system identifies the pattern, explains it, recommends a targeted intervention, and captures human approval.
+
+## Recommended Demo Shape
+
+Build approach A.
+
+### Approach A - Recommended: Executive Situation Room plus Fraud Response Workbench
+
+Combine an AI/BI dashboard for the executive view with a Databricks App for guided investigation and response. This is the strongest CIO demo because it shows the full Databricks platform: Unity Catalog governance, Lakeflow pipelines, Delta tables, metric views, dashboards, Genie-style natural-language analytics, model scoring, lineage, and agentic workflow.
+
+### Approach B - Fraud Operations Cockpit
+
+Focus mainly on analyst queues, case handling, and intervention performance. This is operationally useful but less compelling for a CIO because it underplays enterprise architecture, governance, and reusable data products.
+
+### Approach C - Model Risk and Control Tower
+
+Focus on AI governance, model lineage, evaluations, and approvals. This is relevant, but it is better as a second demo or a supporting tab. For use case one, the main story should start with client protection and then show governance as the reason BMO can scale safely.
+
+## Databricks Assets to Create
+
+Create a complete Databricks solution with the following assets:
+
+- Unity Catalog catalog: `bmo_fraud_demo`
+- Schemas:
+  - `raw`
+  - `silver`
+  - `features`
+  - `serving`
+  - `ai`
+  - `governance`
+- Lakeflow or equivalent Databricks pipelines:
+  - `bmo_fraud_01_bronze_ingest`
+  - `bmo_fraud_02_signal_curation`
+  - `bmo_fraud_03_feature_scoring`
+  - `bmo_fraud_04_gold_serving`
+- Synthetic data generator with deterministic seed.
+- AI/BI dashboard or equivalent dashboard artifact.
+- Metric view or semantic layer for governed fraud KPIs.
+- Genie-ready views, table comments, column comments, synonyms, and sample questions.
+- Databricks App called `BMO Scam Defense Command Center`.
+- Agentic workflow components that can recommend and draft actions, but cannot autonomously execute customer-impacting controls.
+- Audit and approval tables for every recommendation, approval, rejection, and simulated action.
+
+## Architecture Pattern
+
+Use a medallion architecture:
+
+1. Bronze/raw tables land generated events with source metadata.
+2. Silver tables normalize clients, accounts, devices, payees, channels, payments, logins, cases, and interventions.
+3. Feature tables calculate transaction, client, payee, device, velocity, and graph signals.
+4. Gold/serving tables expose executive scorecards, alert queues, evidence timelines, intervention performance, and Genie-friendly context.
+5. AI/governance tables track model scores, reason codes, agent recommendations, human approvals, data quality, model inventory, and policy boundaries.
+
+Use streaming tables or incremental processing where possible. If true streaming is not available in the builder, simulate streaming with event-time batches and refreshable Delta tables.
+
+## Synthetic Data Requirements
+
+Generate at least 30 days of synthetic data, with enough volume to make dashboards feel real but still performant:
+
+- 50,000 synthetic clients.
+- 70,000 synthetic accounts.
+- 120,000 devices.
+- 85,000 payees.
+- 750,000 to 2,000,000 payment events.
+- 250,000 authentication events.
+- 20,000 payee-management events.
+- 15,000 contact-center interactions.
+- 8,000 fraud cases.
+- 12,000 interventions.
+- 500 to 1,500 suspicious pattern clusters.
+
+Make a configurable parameter for smaller demo data if needed.
+
+Use these payment rails:
+
+- Interac e-Transfer
+- bill pay
+- EFT
+- ACH
+- wire
+- card-not-present
+- debit card
+- real-time payment
+
+Use these channels:
+
+- mobile app
+- web banking
+- contact center
+- branch
+- card network
+- treasury portal
+
+Use these geographies:
+
+- Canada: ON, QC, BC, AB, MB, SK, NS, NB, NL, PE, YT, NT, NU
+- United States: IL, WI, MN, CA, NY, FL, TX, WA, AZ, CO
+
+Include one hero incident for the live demo:
+
+- `alert_id`: `ALERT-BMO-2026-001`
+- `pattern_type`: `bank_impersonation_new_payee_device_change`
+- `headline`: `Bank impersonation scam wave linking new payees, changed devices, and high-risk outbound transfers`
+- Include 247 exposed clients, 63 high-risk transactions, 11 linked payees, 8 recurring devices, and 3 mule-risk clusters.
+- Include at least one transaction that is blocked by step-up, one that is released after customer verification, and one that becomes a confirmed fraud loss.
+
+## Data Model
+
+Create the following tables. Use appropriate Delta data types, constraints where supported, table comments, column comments, and Unity Catalog tags.
+
+### Raw Tables
+
+`raw.auth_events_bronze`
+
+- `raw_event_id`
+- `event_ts`
+- `client_id`
+- `device_id`
+- `channel`
+- `ip_address_hash`
+- `geo_country`
+- `geo_region`
+- `geo_city`
+- `auth_event_type`
+- `mfa_method`
+- `mfa_outcome`
+- `credential_reset_flag`
+- `ip_reputation_score`
+- `raw_payload`
+- `_ingest_ts`
+- `_source_system`
+
+`raw.payment_events_bronze`
+
+- `raw_payment_id`
+- `event_ts`
+- `client_id`
+- `account_id`
+- `payee_id`
+- `device_id`
+- `channel`
+- `payment_rail`
+- `amount`
+- `currency`
+- `payment_status`
+- `destination_bank_region`
+- `memo_signal`
+- `raw_payload`
+- `_ingest_ts`
+- `_source_system`
+
+`raw.payee_events_bronze`
+
+- `raw_payee_event_id`
+- `event_ts`
+- `client_id`
+- `payee_id`
+- `device_id`
+- `event_type`
+- `payee_type`
+- `payee_name_masked`
+- `destination_bank_region`
+- `raw_payload`
+- `_ingest_ts`
+- `_source_system`
+
+`raw.contact_center_events_bronze`
+
+- `raw_call_id`
+- `event_ts`
+- `client_id`
+- `call_reason`
+- `auth_passed`
+- `scam_keyword_flag`
+- `agent_note_summary`
+- `sentiment_band`
+- `raw_payload`
+- `_ingest_ts`
+- `_source_system`
+
+`raw.case_outcomes_bronze`
+
+- `raw_case_id`
+- `event_ts`
+- `client_id`
+- `payment_id`
+- `case_status`
+- `case_disposition`
+- `confirmed_fraud_flag`
+- `fraud_loss_amount`
+- `recovered_amount`
+- `false_positive_flag`
+- `reviewer_role`
+- `raw_payload`
+- `_ingest_ts`
+- `_source_system`
+
+`raw.external_mule_risk_bronze`
+
+- `risk_feed_id`
+- `event_ts`
+- `payee_id`
+- `device_id`
+- `ip_address_hash`
+- `risk_source`
+- `mule_risk_score`
+- `known_bad_flag`
+- `typology`
+- `_ingest_ts`
+
+### Silver Dimension Tables
+
+`silver.dim_client`
+
+- `client_id`
+- `client_type`
+- `segment`
+- `age_band`
+- `home_country`
+- `home_region`
+- `digital_active_flag`
+- `vulnerable_client_indicator`
+- `consent_personalization_flag`
+- `client_since_date`
+- `primary_branch_region`
+- `relationship_value_band`
+- `data_residency_region`
+- `record_start_ts`
+- `record_end_ts`
+- `is_current`
+
+`silver.dim_account`
+
+- `account_id`
+- `client_id`
+- `product_type`
+- `currency`
+- `account_open_date`
+- `account_status`
+- `risk_tier`
+- `business_unit`
+- `product_owner_id`
+- `average_balance_30d`
+- `available_balance`
+- `record_start_ts`
+- `record_end_ts`
+- `is_current`
+
+`silver.dim_device`
+
+- `device_id`
+- `client_id`
+- `device_type`
+- `os_family`
+- `first_seen_ts`
+- `last_seen_ts`
+- `home_region`
+- `device_trust_score`
+- `device_age_days`
+- `is_new_device_7d`
+- `is_shared_device_flag`
+
+`silver.dim_payee`
+
+- `payee_id`
+- `payee_name_masked`
+- `payee_type`
+- `first_seen_ts`
+- `destination_bank_region`
+- `payee_risk_band`
+- `mule_risk_score`
+- `known_bad_flag`
+- `linked_client_count_30d`
+- `linked_device_count_30d`
+
+`silver.dim_channel`
+
+- `channel_id`
+- `channel_name`
+- `channel_group`
+- `region_scope`
+- `owner_team`
+
+`silver.dim_product_owner`
+
+- `product_owner_id`
+- `business_unit`
+- `owner_name`
+- `executive_owner`
+- `region_scope`
+- `approval_sla_minutes`
+
+### Silver Event and Case Tables
+
+`silver.fact_auth_event`
+
+- `auth_event_id`
+- `event_ts`
+- `client_id`
+- `device_id`
+- `channel_id`
+- `auth_event_type`
+- `mfa_method`
+- `mfa_outcome`
+- `credential_reset_flag`
+- `ip_address_hash`
+- `ip_reputation_score`
+- `geo_region`
+- `geo_distance_from_home_km`
+- `successful_auth_flag`
+
+`silver.fact_payee_event`
+
+- `payee_event_id`
+- `event_ts`
+- `client_id`
+- `payee_id`
+- `device_id`
+- `event_type`
+- `is_new_payee_flag`
+- `minutes_since_last_auth`
+- `device_changed_recently_flag`
+
+`silver.fact_payment_event`
+
+- `payment_id`
+- `event_ts`
+- `client_id`
+- `account_id`
+- `payee_id`
+- `device_id`
+- `channel_id`
+- `payment_rail`
+- `amount`
+- `currency`
+- `payment_status`
+- `is_new_payee_flag`
+- `is_first_payment_to_payee_flag`
+- `device_changed_recently_flag`
+- `credential_reset_recently_flag`
+- `minutes_since_credential_reset`
+- `minutes_since_payee_added`
+- `geo_distance_from_home_km`
+- `payment_velocity_1h`
+- `payment_velocity_24h`
+- `amount_vs_client_baseline_zscore`
+- `memo_scam_signal_flag`
+
+`silver.fact_contact_center_event`
+
+- `call_id`
+- `event_ts`
+- `client_id`
+- `call_reason`
+- `auth_passed`
+- `scam_keyword_flag`
+- `agent_note_summary`
+- `sentiment_band`
+- `minutes_to_nearest_payment`
+
+`silver.fact_case`
+
+- `case_id`
+- `opened_ts`
+- `closed_ts`
+- `client_id`
+- `payment_id`
+- `queue_name`
+- `assigned_owner_id`
+- `case_status`
+- `case_disposition`
+- `confirmed_fraud_flag`
+- `fraud_loss_amount`
+- `recovered_amount`
+- `false_positive_flag`
+- `human_review_required_flag`
+- `review_sla_met_flag`
+
+`silver.fact_intervention`
+
+- `intervention_id`
+- `event_ts`
+- `client_id`
+- `payment_id`
+- `case_id`
+- `intervention_type`
+- `intervention_channel`
+- `recommended_by`
+- `approval_status`
+- `approved_by_role`
+- `customer_outcome`
+- `payment_outcome`
+- `prevented_loss_amount`
+- `customer_friction_score`
+- `time_to_intervention_seconds`
+
+`silver.fact_model_score`
+
+- `score_id`
+- `event_ts`
+- `payment_id`
+- `client_id`
+- `model_name`
+- `model_version`
+- `risk_score`
+- `risk_band`
+- `threshold_applied`
+- `reason_codes`
+- `top_features_json`
+- `calibration_bucket`
+- `serving_endpoint_name`
+
+`silver.scam_pattern_cluster`
+
+- `pattern_id`
+- `first_detected_ts`
+- `last_detected_ts`
+- `pattern_type`
+- `severity_band`
+- `linked_client_count`
+- `linked_payment_count`
+- `linked_payee_count`
+- `linked_device_count`
+- `linked_ip_count`
+- `estimated_exposure_amount`
+- `confirmed_loss_amount`
+- `prevented_loss_amount`
+- `status`
+
+`silver.entity_graph_edge`
+
+- `edge_id`
+- `event_ts`
+- `from_entity_type`
+- `from_entity_id`
+- `to_entity_type`
+- `to_entity_id`
+- `edge_type`
+- `edge_weight`
+- `first_seen_ts`
+- `last_seen_ts`
+- `event_count_30d`
+- `risk_weight`
+
+### Feature Tables
+
+`features.client_behavior_baseline`
+
+- `client_id`
+- `as_of_ts`
+- `avg_payment_amount_30d`
+- `p95_payment_amount_30d`
+- `distinct_payees_30d`
+- `distinct_devices_30d`
+- `normal_geo_regions`
+- `normal_payment_rails`
+- `credential_reset_count_30d`
+
+`features.transaction_signal_snapshot`
+
+- `payment_id`
+- `event_ts`
+- `client_id`
+- `account_id`
+- `payee_id`
+- `device_id`
+- `amount_vs_baseline_zscore`
+- `new_payee_signal`
+- `changed_device_signal`
+- `recent_credential_reset_signal`
+- `high_risk_ip_signal`
+- `mule_payee_signal`
+- `contact_center_scam_signal`
+- `payee_device_cluster_signal`
+- `velocity_signal`
+- `aggregate_risk_score`
+- `reason_codes`
+
+`features.payee_device_velocity`
+
+- `payee_id`
+- `device_id`
+- `window_start_ts`
+- `window_end_ts`
+- `distinct_clients`
+- `payment_count`
+- `payment_amount`
+- `new_client_ratio`
+- `risk_weight`
+
+`features.graph_risk_features`
+
+- `entity_id`
+- `entity_type`
+- `as_of_ts`
+- `degree_1h`
+- `degree_24h`
+- `linked_high_risk_payees`
+- `linked_high_risk_devices`
+- `shared_device_client_count`
+- `shared_payee_client_count`
+- `graph_risk_score`
+
+### Serving and Gold Tables
+
+`serving.fraud_alert`
+
+- `alert_id`
+- `created_ts`
+- `pattern_id`
+- `headline`
+- `risk_score`
+- `severity_band`
+- `status`
+- `estimated_exposure_amount`
+- `confirmed_loss_amount`
+- `prevented_loss_amount`
+- `exposed_client_count`
+- `linked_payment_count`
+- `recommended_action`
+- `owner_team`
+- `approval_required_flag`
+- `sla_due_ts`
+
+`serving.alert_evidence_timeline`
+
+- `alert_id`
+- `event_ts`
+- `event_type`
+- `entity_type`
+- `entity_id`
+- `evidence_title`
+- `evidence_detail`
+- `risk_contribution`
+- `source_table`
+- `source_record_id`
+
+`serving.executive_scorecard_daily`
+
+- `metric_date`
+- `region`
+- `business_unit`
+- `channel_group`
+- `payment_rail`
+- `product_owner_id`
+- `payment_count`
+- `high_risk_payment_count`
+- `exposed_client_count`
+- `confirmed_fraud_loss_amount`
+- `prevented_loss_amount`
+- `recovered_amount`
+- `false_positive_count`
+- `intervention_count`
+- `median_time_to_intervention_seconds`
+- `p95_time_to_intervention_seconds`
+- `case_backlog_count`
+
+`serving.intervention_performance`
+
+- `metric_date`
+- `intervention_type`
+- `channel_group`
+- `payment_rail`
+- `intervention_count`
+- `approval_rate`
+- `customer_completion_rate`
+- `false_positive_rate`
+- `prevented_loss_amount`
+- `customer_friction_index`
+- `median_time_to_intervention_seconds`
+
+`serving.product_owner_queue`
+
+- `owner_team`
+- `product_owner_id`
+- `business_unit`
+- `open_alert_count`
+- `open_case_count`
+- `exposure_amount`
+- `sla_breach_count`
+- `recommended_next_action`
+- `last_updated_ts`
+
+`serving.genie_fraud_qa_context`
+
+- A view that joins alert, evidence, payment, payee, device, case, intervention, product owner, and metric context.
+- Include business-friendly column names and comments.
+- Include synonyms for terms such as scam, fraud, mule, step-up, challenge, hold, rail, payee, device, loss, save rate, false positive, exposed clients, and time to intervention.
+
+### AI and Governance Tables
+
+`ai.agent_recommendation`
+
+- `recommendation_id`
+- `created_ts`
+- `alert_id`
+- `agent_name`
+- `agent_version`
+- `recommendation_type`
+- `recommendation_summary`
+- `draft_action_json`
+- `evidence_links_json`
+- `confidence_band`
+- `requires_human_approval_flag`
+- `status`
+
+`ai.agent_tool_call`
+
+- `tool_call_id`
+- `created_ts`
+- `recommendation_id`
+- `agent_name`
+- `tool_name`
+- `input_summary`
+- `output_summary`
+- `source_tables`
+- `success_flag`
+- `latency_ms`
+
+`ai.model_evaluation`
+
+- `evaluation_id`
+- `model_name`
+- `model_version`
+- `evaluation_ts`
+- `auc`
+- `precision_at_threshold`
+- `recall_at_threshold`
+- `false_positive_rate`
+- `calibration_error`
+- `drift_score`
+- `approved_for_demo_flag`
+
+`governance.human_approval`
+
+- `approval_id`
+- `created_ts`
+- `alert_id`
+- `recommendation_id`
+- `approver_role`
+- `approval_decision`
+- `approval_comment`
+- `approved_action_json`
+- `effective_ts`
+
+`governance.audit_event`
+
+- `audit_event_id`
+- `event_ts`
+- `actor_type`
+- `actor_id`
+- `action_type`
+- `asset_type`
+- `asset_id`
+- `before_state_json`
+- `after_state_json`
+- `source_ip_hash`
+- `run_id`
+
+`governance.model_inventory`
+
+- `model_name`
+- `model_version`
+- `owner_team`
+- `risk_tier`
+- `approved_use`
+- `prohibited_use`
+- `approval_status`
+- `last_validation_ts`
+- `next_review_due_ts`
+- `lineage_reference`
+
+`governance.policy_control`
+
+- `control_id`
+- `control_name`
+- `control_type`
+- `applies_to`
+- `policy_statement`
+- `required_evidence`
+- `human_approval_required_flag`
+- `owner_team`
+- `status`
+
+## Risk Scoring Logic
+
+Create a transparent demo scoring model with reason codes. It can be a deterministic model, ML model, or hybrid, but it must be explainable.
+
+Example signal weights:
+
+- New payee within 24 hours: +15
+- Device changed within 7 days: +15
+- Credential reset within 2 hours: +20
+- High-risk IP reputation: +10
+- Payment amount above client p95 baseline: +10
+- Mule-risk payee score above 80: +25
+- Contact-center scam keyword near payment: +10
+- Payee/device graph cluster linked to multiple clients: +15
+- Velocity anomaly within 1 hour: +10
+
+Normalize to a 0 to 100 risk score.
+
+Risk bands:
+
+- 0 to 39: low
+- 40 to 64: elevated
+- 65 to 79: high
+- 80 to 100: critical
+
+Action policy:
+
+- Low: release and monitor.
+- Elevated: passive in-app scam education.
+- High: step-up challenge plus case queue.
+- Critical: temporary payment hold, fraud case creation, and human approval.
+
+Make it clear that the agent recommends and drafts action. It must not autonomously block, release, or contact clients without approval.
+
+## Metric Definitions
+
+Create a metric view or semantic layer over `serving.executive_scorecard_daily` and `serving.intervention_performance`.
+
+Metrics:
+
+- `confirmed_fraud_loss_amount`: sum of confirmed fraud loss.
+- `prevented_loss_amount`: sum of prevented loss from confirmed or high-confidence scam interventions.
+- `recovered_amount`: sum of recovered funds.
+- `net_loss_amount`: confirmed fraud loss minus recovered amount.
+- `scam_intervention_save_rate`: prevented loss divided by prevented loss plus confirmed fraud loss.
+- `false_positive_rate`: false positive interventions divided by total interventions.
+- `exposed_client_count`: distinct clients attached to high or critical risk activity.
+- `high_risk_payment_rate`: high-risk payments divided by all payments.
+- `median_time_to_intervention_seconds`: median seconds from payment event to intervention.
+- `p95_time_to_intervention_seconds`: 95th percentile seconds from payment event to intervention.
+- `case_backlog_count`: open fraud cases.
+- `human_approval_rate`: approved recommendations divided by total agent recommendations.
+- `customer_friction_index`: weighted index from challenge abandonment, failed step-up, false positive, and customer complaint proxy.
+
+Dimensions:
+
+- date
+- region
+- business unit
+- channel group
+- payment rail
+- intervention type
+- risk band
+- product owner
+- scam pattern type
+
+Add business synonyms and descriptions so natural-language analytics can answer executive questions accurately.
+
+## Dashboard Requirements
+
+Create an executive AI/BI dashboard with four sections.
+
+### 1. Executive Command Center
+
+Show:
+
+- Confirmed fraud loss trend.
+- Prevented loss trend.
+- Scam intervention save rate.
+- False positive rate.
+- Exposed clients.
+- Median and p95 time to intervention.
+- Active critical alerts.
+- Exposure by payment rail, channel, region, and product owner.
+
+Use realistic demo values. Example hero numbers:
+
+- `$18.7M` prevented loss in the last 30 days.
+- `$2.4M` active exposure in current scam wave.
+- `247` exposed clients in the hero alert.
+- `4.8 minutes` median time to intervention.
+- `3.1%` false positive rate.
+- `91%` human approval rate for recommended actions.
+
+### 2. Scam Pattern Investigation
+
+Show:
+
+- Hero alert `ALERT-BMO-2026-001`.
+- Timeline from credential reset to payee add to outbound transfer to intervention.
+- Recurring payees, recurring devices, and shared IP hashes.
+- Top contributing reason codes.
+- Network/graph style view if possible.
+
+### 3. Intervention Performance
+
+Show:
+
+- Step-up outcomes.
+- In-app warning outcomes.
+- Hold outcomes.
+- Contact-center verification outcomes.
+- Save rate by intervention type.
+- False positive rate by intervention type.
+- Customer friction index.
+
+### 4. Governance and Trust
+
+Show:
+
+- Model version and validation status.
+- Human approval controls.
+- Policy boundaries.
+- Unity Catalog table lineage summary.
+- Data quality checks.
+- Action audit trail.
+- Open exceptions.
+
+This section is important for the CIO and Chief Architect. It should make the demo feel enterprise-grade, not like a one-off notebook.
+
+## Genie / Natural-Language Analytics Requirements
+
+Configure Genie-ready metadata, sample questions, and curated views. Business users should be able to ask questions such as:
+
+1. Which payees and devices recur in the bank-impersonation pattern?
+2. Which clients reset credentials before outbound transfers?
+3. Which payment rails have the highest confirmed loss rate this week?
+4. What step-up action captures this pattern with the least customer friction?
+5. Which product owners have the highest active exposure?
+6. How much loss did targeted step-up prevent compared with passive warnings?
+7. Which alerts are at risk of breaching review SLA?
+8. Are false positives concentrated in payroll, bill pay, or e-transfer journeys?
+9. Which controls are required before an agent can recommend a customer-facing intervention?
+10. Show the evidence trail for `ALERT-BMO-2026-001`.
+
+The answers should use governed tables and metric definitions, not raw ad hoc calculations.
+
+## Databricks App Requirements
+
+Create a Databricks App called `BMO Scam Defense Command Center`.
+
+The app should have these pages or panels:
+
+### Page 1 - Live Situation
+
+- Executive KPI cards.
+- Active alert queue.
+- Hero alert selected by default.
+- Severity, exposure, client count, payment count, owner, SLA timer.
+
+### Page 2 - Evidence Timeline
+
+- Timeline of login, credential reset, device change, payee add, outbound transfer, contact-center signal, model score, case creation, and intervention.
+- Reason codes with risk contribution.
+- Entity links for client, account, payee, device, IP hash, and case.
+
+### Page 3 - Ask the Data
+
+- Embedded or linked Genie-style question interface if supported.
+- Preloaded question buttons using the questions above.
+- Returned answers should include source tables or source metric names.
+
+### Page 4 - Recommended Action Plan
+
+The agent should generate a plan with:
+
+- Summary of the scam pattern.
+- Recommended control: targeted step-up plus in-app scam warning for linked new-payee and changed-device pattern.
+- Routing: send critical cases to fraud operations queue and owner-specific product queue.
+- Customer action: draft safe, non-alarming customer message.
+- Rule/model change: proposed threshold or rule adjustment.
+- Expected impact: prevented loss, false positive change, customer friction change.
+- Required approvals.
+- Evidence links.
+
+### Page 5 - Human Approval and Audit
+
+- Approve, reject, or request changes for the recommendation.
+- On approval, write to `governance.human_approval` and `governance.audit_event`.
+- Show simulated downstream actions. Do not execute real actions.
+- Display an immutable audit trail.
+
+### Page 6 - Impact After Approval
+
+- Show expected before/after metrics.
+- Show alert exposure reduced.
+- Show prevented loss estimate.
+- Show false positive and customer friction tradeoff.
+- Show model and policy controls still in compliance.
+
+## Agentic Workflow Requirements
+
+Implement a multi-agent pattern if supported. If not, simulate it with modular functions.
+
+Agents:
+
+1. `Pattern Investigator Agent`
+   - Uses serving tables and Genie-ready context.
+   - Finds recurring payees, devices, IP hashes, credential resets, and payment patterns.
+
+2. `Risk Scoring Agent`
+   - Uses model scores, feature snapshots, and reason codes.
+   - Explains why each transaction is high risk.
+
+3. `Policy Guardrail Agent`
+   - Checks `governance.policy_control`.
+   - Enforces that customer-impacting actions require human approval.
+   - Blocks unsupported recommendations.
+
+4. `Intervention Planner Agent`
+   - Recommends targeted step-up, in-app scam warning, case routing, or temporary hold.
+   - Estimates loss prevention and friction impact.
+
+5. `Executive Briefing Agent`
+   - Produces a concise CIO-ready summary with KPIs, evidence, recommendation, risk, approval status, and expected impact.
+
+All agent actions must be logged in `ai.agent_tool_call`.
+
+## Demo Script
+
+Build the demo so it can be presented in 8 to 12 minutes.
+
+### Minute 0 to 2 - Executive Hook
+
+Open the Executive Command Center and say:
+
+"This is a governed scam-defense operating layer. It joins identity, device, payee, payment, case, and intervention data fast enough to recommend action before funds move, while keeping customer-impacting decisions under human approval."
+
+Show:
+
+- Prevented loss.
+- Active exposure.
+- Save rate.
+- False positive rate.
+- Time to intervention.
+- Hero alert.
+
+### Minute 2 to 4 - Investigate the Pattern
+
+Open `ALERT-BMO-2026-001`.
+
+Show:
+
+- 247 exposed clients.
+- 63 high-risk transactions.
+- 11 linked payees.
+- 8 recurring devices.
+- 3 mule-risk clusters.
+- Timeline from credential reset to new payee to outbound transfer.
+
+### Minute 4 to 6 - Ask Natural-Language Questions
+
+Use Genie-style questions:
+
+- Which payees and devices recur in this pattern?
+- Which clients reset credentials before outbound transfers?
+- What step-up action captures this pattern with the least customer friction?
+
+Answers should cite governed metrics or serving views.
+
+### Minute 6 to 9 - Agent Recommends Human-Approved Action
+
+Open Recommended Action Plan.
+
+Show:
+
+- Recommendation: targeted step-up plus in-app scam warning for linked new-payee and changed-device pattern.
+- Action draft: case routing update, threshold/rule change, customer message, fraud operations queue.
+- Guardrail: human approval required.
+- Evidence links.
+- Expected impact.
+
+Approve the simulated action and show the audit record.
+
+### Minute 9 to 12 - Close with CIO Value
+
+Show Impact After Approval and Governance and Trust.
+
+Say:
+
+"The value is not just a better fraud model. It is a governed operating system for scam defense: reusable data products, consistent metrics, natural-language access for business teams, explainable recommendations, human accountability, and a measured feedback loop."
+
+## Visual and UX Guidance
+
+Make the app polished and executive-ready:
+
+- Use BMO-inspired red, blue, white, and neutral tones without overusing brand marks.
+- Avoid a toy demo feel.
+- Put key risk numbers above the fold.
+- Use concise executive copy.
+- Make drilldowns feel fast and intentional.
+- Show source evidence and governance beside recommendations.
+- Use realistic timestamps, owners, and SLAs.
+- Make the app default to the hero alert so the demo starts cleanly.
+
+Do not create a marketing landing page. The first screen should be the usable command center.
+
+## Governance, Privacy, and Risk Requirements
+
+Implement:
+
+- Synthetic data only.
+- Pseudonymized IDs.
+- Masked payee names.
+- No raw PII fields.
+- Unity Catalog tags such as `data_classification`, `synthetic_demo`, `owner_team`, `jurisdiction`, and `approved_use`.
+- Row filters or views for region/business-unit scoping if supported.
+- Column masks for any quasi-sensitive demo fields if supported.
+- Table and column comments for all serving and governance assets.
+- Audit logging for recommendations, approvals, and simulated actions.
+- Human-in-the-loop control for any customer-impacting recommendation.
+
+Policy boundaries:
+
+- The app may recommend, draft, route, and simulate.
+- The app may not autonomously block payments, release payments, change production rules, or contact clients.
+- All customer-impacting steps require human approval and must be logged.
+
+## Acceptance Criteria
+
+The build is complete when:
+
+1. The catalog, schemas, tables, views, and metric layer exist.
+2. Synthetic data loads successfully and includes the hero alert.
+3. Pipelines can refresh from raw through serving tables.
+4. The executive dashboard displays all required KPIs.
+5. The app opens directly to the active scam-defense command center.
+6. The hero alert investigation works end to end.
+7. Natural-language questions work or are simulated through curated Genie-ready queries.
+8. The agent recommendation creates a plan with evidence and required approvals.
+9. Approval writes records to governance tables.
+10. The governance view shows model version, policy boundaries, data quality, and audit trail.
+11. A presenter can complete the 8 to 12 minute script without editing data.
+
+## Deliverables
+
+Return:
+
+- Names and paths of all Databricks assets created.
+- DDL or generated table definitions.
+- Pipeline names and run instructions.
+- Dashboard URL or path.
+- App URL or path.
+- Sample Genie questions.
+- Demo script.
+- Validation queries that prove the hero alert, KPIs, and approval workflow are populated.
+
+## Validation Queries to Include
+
+Include SQL similar to:
+
+```sql
+SELECT *
+FROM bmo_fraud_demo.serving.fraud_alert
+WHERE alert_id = 'ALERT-BMO-2026-001';
+```
+
+```sql
+SELECT event_ts, event_type, evidence_title, risk_contribution, source_table
+FROM bmo_fraud_demo.serving.alert_evidence_timeline
+WHERE alert_id = 'ALERT-BMO-2026-001'
+ORDER BY event_ts;
+```
+
+```sql
+SELECT
+  SUM(prevented_loss_amount) AS prevented_loss,
+  SUM(confirmed_fraud_loss_amount) AS confirmed_loss,
+  SUM(prevented_loss_amount) / NULLIF(SUM(prevented_loss_amount) + SUM(confirmed_fraud_loss_amount), 0) AS save_rate
+FROM bmo_fraud_demo.serving.executive_scorecard_daily
+WHERE metric_date >= current_date() - INTERVAL 30 DAYS;
+```
+
+```sql
+SELECT *
+FROM bmo_fraud_demo.ai.agent_recommendation
+WHERE alert_id = 'ALERT-BMO-2026-001'
+ORDER BY created_ts DESC;
+```
+
+```sql
+SELECT *
+FROM bmo_fraud_demo.governance.human_approval
+WHERE alert_id = 'ALERT-BMO-2026-001'
+ORDER BY created_ts DESC;
+```
+
+## Final Instruction
+
+Optimize for a CIO demo. Make it feel like BMO could scale this across digital banking, payments, cards, contact center, and fraud operations. The winning impression should be: Databricks is not just storing data, it is creating a governed, explainable, human-accountable intelligence layer for protecting clients and the bank.
