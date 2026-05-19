@@ -131,6 +131,15 @@ phase_roadmap:
   - description: Documentation of Raw data model including tables, columns, Delta
       types, constraints, comments, and UC tags.
     deliverable_id: raw_data_model_docs
+  status: failed
+  progress: 100
+  latest_run:
+    id: c8b862ff-00eb-49dc-b94a-a89ea9a47bde
+    state: failed
+    run_assessment: null
+    current_stage: preflight
+    started_at: '2026-05-19T15:04:46.741749+00:00'
+    ended_at: null
 - name: Silver & Feature Engineering
   size: large
   context:
