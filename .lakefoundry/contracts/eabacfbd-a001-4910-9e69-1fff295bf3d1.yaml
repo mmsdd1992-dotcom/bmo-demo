@@ -134,11 +134,11 @@ phase_roadmap:
   status: failed
   progress: 100
   latest_run:
-    id: 7b65155d-c8d8-4463-96df-166c6c6febec
+    id: d6b1c858-92a5-45a8-842b-16183507cff8
     state: failed
     run_assessment: null
     current_stage: preflight
-    started_at: '2026-05-19T15:04:56.978667+00:00'
+    started_at: '2026-05-19T15:05:02.263258+00:00'
     ended_at: null
 - name: Silver & Feature Engineering
   size: large
